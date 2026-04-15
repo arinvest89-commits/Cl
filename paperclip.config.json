@@ -1,0 +1,32 @@
+{
+  "$meta": {
+    "version": 1,
+    "source": "setup"
+  },
+  "database": {
+    "mode": "postgres",
+    "connectionString": "postgresql://paperclip:paperclip@127.0.0.1:5432/paperclip"
+  },
+  "server": {
+    "deploymentMode": "authenticated",
+    "exposure": "public",
+    "host": "0.0.0.0",
+    "port": 3100,
+    "serveUi": true
+  },
+  "auth": {
+    "baseUrlMode": "explicit",
+    "publicBaseUrl": "http://167.71.137.62:3100",
+    "disableSignUp": false
+  },
+  "storage": {
+    "provider": "local_disk"
+  },
+  "secrets": {
+    "provider": "local_encrypted",
+    "strictMode": false
+  },
+  "logging": {
+    "mode": "file"
+  }
+}
