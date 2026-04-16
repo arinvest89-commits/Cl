@@ -1,0 +1,292 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Agent Team Control Centre — Textual CSS
+   ────────────────────────────────────────────────────────────────────────── */
+
+Screen {
+    background: #0d1117;
+    color: #c9d1d9;
+    layout: vertical;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+#header {
+    height: 3;
+    background: #161b22;
+    border-bottom: solid #30363d;
+    padding: 0 2;
+    layout: horizontal;
+    content-align: left middle;
+}
+
+#header-title {
+    color: #58a6ff;
+    text-style: bold;
+    width: 1fr;
+    content-align: left middle;
+}
+
+#header-project {
+    color: #3fb950;
+    width: 1fr;
+    content-align: center middle;
+}
+
+#header-status {
+    width: 1fr;
+    content-align: right middle;
+    color: #8b949e;
+}
+
+/* ── Main body ──────────────────────────────────────────────────────────── */
+#body {
+    layout: horizontal;
+    height: 1fr;
+}
+
+/* ── Left panel: Agent Activity ──────────────────────────────────────────── */
+#left-panel {
+    width: 28;
+    border-right: solid #30363d;
+    layout: vertical;
+    background: #0d1117;
+}
+
+#left-panel-title {
+    height: 2;
+    background: #161b22;
+    border-bottom: solid #30363d;
+    padding: 0 1;
+    content-align: left middle;
+    color: #8b949e;
+    text-style: bold;
+}
+
+#agent-list {
+    height: 1fr;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.agent-item {
+    height: 4;
+    border-bottom: solid #21262d;
+    padding: 0 1;
+    layout: vertical;
+}
+
+.agent-name {
+    color: #58a6ff;
+    text-style: bold;
+    height: 1;
+}
+
+.agent-status {
+    color: #8b949e;
+    height: 1;
+}
+
+.agent-task {
+    color: #c9d1d9;
+    height: 1;
+    overflow: hidden;
+}
+
+/* Status indicator colours */
+.status-idle     { color: #484f58; }
+.status-thinking { color: #d29922; }
+.status-working  { color: #3fb950; }
+.status-waiting  { color: #58a6ff; }
+.status-error    { color: #f85149; }
+
+/* ── Centre panel: Chat ─────────────────────────────────────────────────── */
+#centre-panel {
+    width: 1fr;
+    layout: vertical;
+    border-right: solid #30363d;
+}
+
+#chat-title {
+    height: 2;
+    background: #161b22;
+    border-bottom: solid #30363d;
+    padding: 0 1;
+    content-align: left middle;
+    color: #8b949e;
+    text-style: bold;
+}
+
+#chat-log {
+    height: 1fr;
+    overflow-y: auto;
+    padding: 1 2;
+    background: #0d1117;
+}
+
+#input-row {
+    height: 3;
+    layout: horizontal;
+    border-top: solid #30363d;
+    background: #161b22;
+    padding: 0 1;
+}
+
+#chat-input {
+    width: 1fr;
+    border: none;
+    background: #21262d;
+    color: #c9d1d9;
+    height: 1;
+    margin: 1 1 1 0;
+}
+
+#send-btn {
+    width: 10;
+    height: 1;
+    background: #1f6feb;
+    color: white;
+    border: none;
+    margin: 1 0;
+}
+
+#send-btn:hover {
+    background: #388bfd;
+}
+
+/* ── Right panel: Project Dashboard ─────────────────────────────────────── */
+#right-panel {
+    width: 32;
+    layout: vertical;
+    background: #0d1117;
+}
+
+#right-panel-title {
+    height: 2;
+    background: #161b22;
+    border-bottom: solid #30363d;
+    padding: 0 1;
+    content-align: left middle;
+    color: #8b949e;
+    text-style: bold;
+}
+
+#project-dashboard {
+    height: 1fr;
+    overflow-y: auto;
+    padding: 1;
+}
+
+.section-header {
+    color: #58a6ff;
+    text-style: bold;
+    margin-top: 1;
+    margin-bottom: 0;
+}
+
+.metric-row {
+    layout: horizontal;
+    height: 1;
+}
+
+.metric-label {
+    width: 1fr;
+    color: #8b949e;
+}
+
+.metric-value {
+    color: #3fb950;
+    text-style: bold;
+}
+
+/* ── Approval queue ─────────────────────────────────────────────────────── */
+#approval-section {
+    border-top: solid #30363d;
+    padding: 1;
+    max-height: 14;
+    overflow-y: auto;
+}
+
+.approval-item {
+    border: solid #d29922;
+    padding: 1;
+    margin-bottom: 1;
+    background: #1c1a13;
+}
+
+.approval-title {
+    color: #d29922;
+    text-style: bold;
+}
+
+.approval-desc {
+    color: #c9d1d9;
+    margin: 0 0 1 0;
+}
+
+.approval-btns {
+    layout: horizontal;
+    height: 1;
+}
+
+.approve-btn {
+    background: #1a4721;
+    color: #3fb950;
+    border: solid #3fb950;
+    width: 10;
+    margin-right: 1;
+}
+
+.reject-btn {
+    background: #2d0f0e;
+    color: #f85149;
+    border: solid #f85149;
+    width: 10;
+}
+
+/* ── Chat bubbles ────────────────────────────────────────────────────────── */
+.msg-user {
+    background: #1c2128;
+    border-left: solid #58a6ff;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+.msg-agent {
+    background: #0f1e14;
+    border-left: solid #3fb950;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+.msg-system {
+    background: #1a1300;
+    border-left: solid #d29922;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+.msg-external {
+    background: #1a0f1e;
+    border-left: solid #a371f7;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+.msg-sender {
+    text-style: bold;
+    height: 1;
+}
+
+.msg-time {
+    color: #484f58;
+    height: 1;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+#footer {
+    height: 1;
+    background: #161b22;
+    border-top: solid #30363d;
+    padding: 0 2;
+    color: #484f58;
+    content-align: left middle;
+}
