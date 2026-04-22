@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Team</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1117;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+:root{--cyan:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--purple:#bc8cff;--orange:#ffa657;--dim:#8b949e;--border:#30363d;--surface:#161b22;--surface2:#21262d}
+header{background:#161b22;border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+header h1{font-size:15px;font-weight:700;color:var(--cyan);letter-spacing:.5px}
+#conn-dot{width:8px;height:8px;border-radius:50%;background:var(--red);margin-left:auto;transition:background .3s}
+#conn-dot.on{background:var(--green)}
+#pending-badge{background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;display:none}
+.main{display:grid;grid-template-columns:270px 1fr 340px;grid-template-rows:1fr;flex:1;overflow:hidden;gap:0}
+/* LEFT PANEL */
+.left{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between}
+.project-list{overflow-y:auto;flex:1}
+.project-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.project-item:hover{background:var(--surface2)}
+.project-item.active{background:#1f2937;border-left:3px solid var(--cyan)}
+.project-item .pname{font-size:13px;font-weight:600;color:#e6edf3}
+.project-item .pmeta{font-size:11px;color:var(--dim);margin-top:3px}
+.project-metrics{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface)}
+.metric-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+.metric-label{color:var(--dim)}
+.metric-value{font-weight:600}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;margin:6px 0 10px}
+.progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
+.tasks-list{overflow-y:auto;max-height:220px;padding:8px 0}
+.task-item{padding:6px 14px;font-size:12px;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid #1c2128}
+.task-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.dot-completed{background:var(--green)}
+.dot-in_progress{background:var(--cyan)}
+.dot-pending{background:var(--dim)}
+.dot-blocked{background:var(--red)}
+.dot-failed{background:var(--red)}
+.task-title{color:#c9d1d9;line-height:1.4}
+.task-priority{font-size:10px;padding:1px 5px;border-radius:3px;margin-left:auto;flex-shrink:0}
+.pri-critical{background:#3d1a1a;color:var(--red)}
+.pri-high{background:#2d1e0e;color:var(--orange)}
+.pri-medium{background:#1f2a1f;color:var(--green)}
+.pri-low{background:#1a1f2e;color:var(--dim)}
+/* CENTRE */
+.centre{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.activity-feed{flex:1;overflow-y:auto;padding:0}
+.activity-item{padding:7px 14px;border-bottom:1px solid #1c2128;display:grid;grid-template-columns:60px 36px 1fr;gap:8px;align-items:center;font-size:12px}
+.activity-item:hover{background:var(--surface2)}
+.act-time{color:var(--dim);font-size:11px}
+.agent-badge{font-size:10px;font-weight:700;padding:2px 5px;border-radius:4px;text-align:center}
+.badge-orchestrator{background:#0d2137;color:var(--cyan)}
+.badge-researcher{background:#0d1637;color:#79c0ff)}
+.badge-strategist{background:#1f0d37;color:var(--purple)}
+.badge-operations{background:#0d2116;color:var(--green)}
+.badge-forecaster{background:#2a1f05;color:var(--yellow)}
+.badge-qa{background:#2a0d0d;color:var(--red)}
+.badge-integrator{background:#2a1805;color:var(--orange)}
+.badge-external{background:#1c1c1c;color:#e6edf3}
+.act-desc{color:#c9d1d9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act-desc.fail{color:var(--red)}
+/* APPROVALS BAR */
+.approvals-bar{border-top:1px solid var(--border);background:#1a0d0d;max-height:180px;overflow-y:auto;flex-shrink:0}
+.approval-card{padding:10px 14px;border-bottom:1px solid #2a1515}
+.approval-title{font-size:12px;font-weight:600;color:#ffa0a0}
+.approval-desc{font-size:11px;color:var(--dim);margin:4px 0;max-height:40px;overflow:hidden}
+.approval-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.btn-approve{background:#1a3a1a;color:var(--green);border:1px solid var(--green);padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;transition:background .15s}
+.btn-approve:hover{background:#24512a}
+.btn-reject{background:#3a1a1a;color:var(--red);border:1px solid var(--red);padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer}
+.btn-reject:hover{background:#522424}
+.btn-option{background:var(--surface2);color:#c9d1d9;border:1px solid var(--border);padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer}
+.btn-option:hover{background:#2d333b}
+/* RIGHT — CHAT */
+.right{display:flex;flex-direction:column;overflow:hidden}
+.chat-messages{flex:1;overflow-y:auto;padding:12px}
+.msg{margin-bottom:14px}
+.msg-header{font-size:11px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.msg-time{color:var(--dim)}
+.msg-sender{font-weight:700}
+.msg-user .msg-sender{color:var(--yellow)}
+.msg-agent .msg-sender{color:var(--cyan)}
+.msg-orchestrator .msg-sender{color:var(--cyan)}
+.msg-researcher .msg-sender{color:#79c0ff}
+.msg-strategist .msg-sender{color:var(--purple)}
+.msg-operations .msg-sender{color:var(--green)}
+.msg-forecaster .msg-sender{color:var(--yellow)}
+.msg-qa .msg-sender{color:var(--red)}
+.msg-integrator .msg-sender{color:var(--orange)}
+.msg-body{font-size:13px;color:#c9d1d9;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.msg-user .msg-body{background:#1f2a1a;border-left:3px solid var(--yellow);padding:8px 10px;border-radius:0 6px 6px 0}
+.chat-input-area{padding:10px 12px;border-top:1px solid var(--border);background:var(--surface)}
+.chat-input-row{display:flex;gap:8px}
+#chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:#e6edf3;padding:9px 12px;border-radius:6px;font-size:13px;outline:none;resize:none;font-family:inherit}
+#chat-input:focus{border-color:var(--cyan)}
+#chat-send{background:var(--cyan);color:#0d1117;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px;transition:opacity .15s}
+#chat-send:hover{opacity:.85}
+#chat-send:disabled{opacity:.4;cursor:not-allowed}
+.quick-actions{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.qa-btn{background:var(--surface2);border:1px solid var(--border);color:var(--dim);padding:4px 9px;border-radius:4px;font-size:11px;cursor:pointer;transition:all .15s}
+.qa-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+/* NEW PROJECT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:16px;margin-bottom:18px;color:var(--cyan)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--dim);margin-bottom:5px;font-weight:600}
+.field input,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:#e6edf3;padding:8px 11px;border-radius:6px;font-size:13px;font-family:inherit;outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--cyan)}
+.field textarea{resize:vertical;min-height:70px}
+.field small{color:var(--dim);font-size:11px;margin-top:3px;display:block}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.btn-primary{background:var(--cyan);color:#0d1117;border:none;padding:9px 20px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px}
+.btn-cancel{background:transparent;color:var(--dim);border:1px solid var(--border);padding:9px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+/* EXT AGENTS */
+.ext-agents{padding:8px 14px;border-top:1px solid var(--border);background:var(--surface);display:flex;gap:12px;flex-wrap:wrap}
+.agent-pill{font-size:11px;display:flex;align-items:center;gap:4px}
+.agent-pill .dot{width:6px;height:6px;border-radius:50%}
+.online{background:var(--green)}.offline{background:var(--red)}.unknown{background:var(--dim)}
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+/* Typing indicator */
+.typing{color:var(--dim);font-size:12px;font-style:italic;padding:4px 12px;display:none}
+.typing.show{display:block}
+/* Toast */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);color:#e6edf3;padding:10px 16px;border-radius:7px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#9670; AGENT TEAM</h1>
+  <span style="color:var(--dim);font-size:12px">Project Management &amp; Execution</span>
+  <span id="pending-badge">0 approvals</span>
+  <button onclick="showModal()" style="background:var(--cyan);color:#0d1117;border:none;padding:5px 13px;border-radius:5px;cursor:pointer;font-weight:700;font-size:12px;margin-left:8px">+ New Project</button>
+  <div id="conn-dot" title="WebSocket status"></div>
+</header>
+
+<div class="main">
+  <!-- LEFT: Projects + tasks -->
+  <div class="left">
+    <div class="panel-header">Projects <span id="proj-count" style="color:var(--dim);font-weight:400">0</span></div>
+    <div id="project-list" class="project-list"></div>
+    <div id="project-metrics" class="project-metrics" style="display:none"></div>
+    <div class="panel-header" style="border-top:1px solid var(--border)">Tasks</div>
+    <div id="tasks-list" class="tasks-list"></div>
+  </div>
+
+  <!-- CENTRE: Activity + approvals -->
+  <div class="centre">
+    <div class="panel-header">
+      Agent Activity Feed
+      <button onclick="runAction('standup')" class="qa-btn" style="margin:0">Standup</button>
+    </div>
+    <div id="activity-feed" class="activity-feed"></div>
+    <div id="approvals-bar" class="approvals-bar" style="display:none">
+      <div class="panel-header" style="background:#1a0d0d;color:#ffa0a0">Pending Approvals</div>
+      <div id="approvals-list"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Chat -->
+  <div class="right">
+    <div class="panel-header">Chat with Agent Team</div>
+    <div id="chat-messages" class="chat-messages"></div>
+    <div class="typing" id="typing-indicator">Agent Team is thinking...</div>
+    <div class="chat-input-area">
+      <div class="quick-actions">
+        <button class="qa-btn" onclick="runAction('research')">Research</button>
+        <button class="qa-btn" onclick="runAction('strategy')">Strategy</button>
+        <button class="qa-btn" onclick="runAction('forecast')">Forecast</button>
+        <button class="qa-btn" onclick="runAction('test')">QA Test</button>
+        <button class="qa-btn" onclick="runAction('tools')">Tools</button>
+        <button class="qa-btn" onclick="runAction('risk')">Risk</button>
+        <button class="qa-btn" onclick="triggerDaily()">Daily Cycle</button>
+      </div>
+      <div class="chat-input-row">
+        <textarea id="chat-input" rows="2" placeholder="Message the Project Manager... (Enter to send, Shift+Enter for newline)"></textarea>
+        <button id="chat-send" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+    <div class="ext-agents" id="ext-agents"></div>
+  </div>
+</div>
+
+<!-- New Project Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>Create New Project</h2>
+    <div class="field">
+      <label>Project Name *</label>
+      <input id="new-name" type="text" placeholder="e.g. E-commerce Launch 2025">
+    </div>
+    <div class="field">
+      <label>Project Outline</label>
+      <textarea id="new-outline" placeholder="Describe the project in detail..."></textarea>
+    </div>
+    <div class="field">
+      <label>Goals</label>
+      <textarea id="new-goals" placeholder="One goal per line&#10;e.g. Launch MVP by Q3&#10;Acquire 1000 users"></textarea>
+      <small>One per line</small>
+    </div>
+    <div class="field">
+      <label>Targets</label>
+      <textarea id="new-targets" placeholder="One target per line&#10;e.g. £50k revenue&#10;95% uptime"></textarea>
+      <small>One per line</small>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="hideModal()">Cancel</button>
+      <button class="btn-primary" onclick="createProject()" id="create-btn">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const AGENT_LABELS = {
+  orchestrator:'PM', researcher:'RA', strategist:'SL',
+  operations:'OM', forecaster:'FA', qa:'QA', integrator:'IS', external:'EX'
+};
+
+let ws, activeProjectId = null, state = {projects:[], messages:[], activities:[], approvals:[]};
+
+// ── WebSocket ─────────────────────────────────────────────────────────────────
+function connect() {
+  ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = () => { document.getElementById('conn-dot').className = 'on'; ping(); };
+  ws.onclose = () => { document.getElementById('conn-dot').className = ''; setTimeout(connect, 3000); };
+  ws.onmessage = e => handleWS(JSON.parse(e.data));
+}
+
+function ping() { if(ws.readyState===1){ ws.send('ping'); setTimeout(ping,20000); } }
+
+function handleWS(msg) {
+  if (msg.event === 'init') {
+    state = { ...state, ...msg.data };
+    renderAll();
+  } else if (msg.event === 'message') {
+    state.messages.push(msg.data);
+    appendMessage(msg.data);
+    document.getElementById('typing-indicator').className = 'typing';
+  } else if (msg.event === 'activity') {
+    state.activities.unshift(msg.data);
+    prependActivity(msg.data);
+  } else if (msg.event === 'approval') {
+    const idx = state.approvals.findIndex(a => a.id === msg.data.id);
+    if (idx >= 0) state.approvals[idx] = msg.data; else state.approvals.push(msg.data);
+    renderApprovals();
+  } else if (msg.event === 'project_update') {
+    const idx = state.projects.findIndex(p => p.id === msg.data.id);
+    if (idx >= 0) state.projects[idx] = msg.data; else state.projects.push(msg.data);
+    if (activeProjectId === msg.data.id) renderProjectMetrics(msg.data);
+  }
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderProjects();
+  renderMessages();
+  renderActivities();
+  renderApprovals();
+  renderExtAgents();
+  if (!activeProjectId && state.projects.length) setActiveProject(state.projects[0].id);
+}
+
+function renderProjects() {
+  const list = document.getElementById('project-list');
+  document.getElementById('proj-count').textContent = state.projects.length;
+  list.innerHTML = state.projects.map(p => `
+    <div class="project-item ${p.id===activeProjectId?'active':''}" onclick="setActiveProject('${p.id}')">
+      <div class="pname">${esc(p.name)}</div>
+      <div class="pmeta">${p.status.toUpperCase()} &bull; ${p.metrics.completion_rate}% &bull; Health ${p.metrics.health_score}</div>
+    </div>`).join('');
+}
+
+function setActiveProject(id) {
+  activeProjectId = id;
+  const p = state.projects.find(x => x.id === id);
+  if (!p) return;
+  renderProjects();
+  renderProjectMetrics(p);
+  renderTasks(p);
+}
+
+function renderProjectMetrics(p) {
+  const el = document.getElementById('project-metrics');
+  el.style.display = 'block';
+  const fc = p.forecast ? `<div class="metric-row"><span class="metric-label">ETA</span><span class="metric-value" style="color:var(--yellow)">~${p.forecast.days}d (${Math.round(p.forecast.confidence*100)}%)</span></div>` : '';
+  el.innerHTML = `
+    <div class="metric-row"><span class="metric-label">Status</span><span class="metric-value" style="color:var(--green)">${p.status.toUpperCase()}</span></div>
+    <div class="metric-row"><span class="metric-label">Health</span><span class="metric-value">${p.metrics.health_score}/100</span></div>
+    <div class="metric-row"><span class="metric-label">Tasks</span><span class="metric-value">${p.metrics.tasks_completed}/${p.metrics.tasks_total} done</span></div>
+    <div class="metric-row"><span class="metric-label">Blocked</span><span class="metric-value" style="color:${p.metrics.tasks_blocked?'var(--red)':'var(--green)'}">${p.metrics.tasks_blocked}</span></div>
+    ${fc}
+    <div class="progress-bar"><div class="progress-fill" style="width:${p.metrics.completion_rate}%"></div></div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:4px">Goals</div>
+    ${p.goals.slice(0,3).map(g=>`<div style="font-size:11px;color:#8b949e;margin-bottom:2px">&bull; ${esc(g.substring(0,40))}</div>`).join('')}
+  `;
+}
+
+function renderTasks(p) {
+  const el = document.getElementById('tasks-list');
+  if (!p.tasks || !p.tasks.length) { el.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:var(--dim)">No tasks yet.</div>'; return; }
+  el.innerHTML = p.tasks.slice(0, 40).map(t => `
+    <div class="task-item">
+      <span class="task-dot dot-${t.status}"></span>
+      <span class="task-title">${esc(t.title.substring(0,42))}</span>
+      <span class="task-priority pri-${t.priority}">${t.priority}</span>
+    </div>`).join('');
+}
+
+function renderMessages() {
+  const el = document.getElementById('chat-messages');
+  el.innerHTML = state.messages.map(m => msgHTML(m)).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function appendMessage(m) {
+  const el = document.getElementById('chat-messages');
+  el.insertAdjacentHTML('beforeend', msgHTML(m));
+  el.scrollTop = el.scrollHeight;
+}
+
+function msgHTML(m) {
+  const sender = m.role === 'user' ? 'YOU' : (AGENT_LABELS[m.agent] || 'AG') + ' ' + (m.agent||'agent').toUpperCase();
+  const cls = m.role === 'user' ? 'msg-user' : `msg-${m.agent||'agent'}`;
+  const time = new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  return `<div class="msg ${cls}">
+    <div class="msg-header"><span class="msg-sender">${sender}</span><span class="msg-time">${time}</span></div>
+    <div class="msg-body">${esc(m.content)}</div>
+  </div>`;
+}
+
+function renderActivities() {
+  const el = document.getElementById('activity-feed');
+  el.innerHTML = state.activities.slice(0,60).map(actHTML).join('');
+}
+
+function prependActivity(a) {
+  document.getElementById('activity-feed').insertAdjacentHTML('afterbegin', actHTML(a));
+}
+
+function actHTML(a) {
+  const time = new Date(a.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  return `<div class="activity-item">
+    <span class="act-time">${time}</span>
+    <span class="agent-badge badge-${a.agent}">${AGENT_LABELS[a.agent]||'??'}</span>
+    <span class="act-desc ${a.success?'':'fail'}">${esc(a.action)}: ${esc(a.description.substring(0,80))}</span>
+  </div>`;
+}
+
+function renderApprovals() {
+  const pending = state.approvals.filter(a => a.status === 'pending');
+  const bar = document.getElementById('approvals-bar');
+  const badge = document.getElementById('pending-badge');
+  badge.style.display = pending.length ? 'inline' : 'none';
+  badge.textContent = `${pending.length} approval${pending.length!==1?'s':''}`;
+  bar.style.display = pending.length ? 'block' : 'none';
+  document.getElementById('approvals-list').innerHTML = pending.map(a => `
+    <div class="approval-card">
+      <div class="approval-title">${esc(a.title)} <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:#3a1a1a;color:var(--red)">${a.impact_level.toUpperCase()}</span></div>
+      <div class="approval-desc">${esc(a.description.substring(0,120))}...</div>
+      <div class="approval-actions">
+        ${a.options.map((opt,i) => `<button class="btn-${i===0?'approve':'option'}" onclick="resolveApproval('${a.id}','${esc(opt)}')">${esc(opt)}</button>`).join('')}
+        <button class="btn-reject" onclick="resolveApproval('${a.id}','Rejected')">Reject</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderExtAgents() {
+  const el = document.getElementById('ext-agents');
+  const statuses = state.agent_statuses || {};
+  if (!Object.keys(statuses).length) { el.style.display='none'; return; }
+  el.innerHTML = Object.entries(statuses).map(([name, status]) =>
+    `<span class="agent-pill"><span class="dot ${status}"></span>${name}: ${status}</span>`
+  ).join('');
+}
+
+// ── Actions ────────────────────────────────────────────────────────────────────
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  document.getElementById('chat-send').disabled = true;
+  document.getElementById('typing-indicator').className = 'typing show';
+  appendMessage({ role:'user', content:msg, timestamp: new Date().toISOString(), agent: null });
+  try {
+    await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message: msg, project_id: activeProjectId })
+    });
+  } catch(e) { toast('Chat error: ' + e.message); }
+  document.getElementById('chat-send').disabled = false;
+}
+
+async function runAction(action) {
+  if (!activeProjectId) { toast('Select or create a project first.'); return; }
+  toast(`Running ${action}...`);
+  document.getElementById('typing-indicator').className = 'typing show';
+  try {
+    const r = await fetch('/api/action', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action, project_id: activeProjectId })
+    });
+    const data = await r.json();
+    if (action === 'tools' && data.tools) showToolsToast(data.tools);
+    await refreshProject();
+  } catch(e) { toast('Error: ' + e.message); }
+  document.getElementById('typing-indicator').className = 'typing';
+}
+
+function showToolsToast(tools) {
+  toast(`Discovered ${tools.length} tools. Check activity feed.`);
+}
+
+async function triggerDaily() {
+  if (!activeProjectId) { toast('Select a project first.'); return; }
+  toast('Daily cycle running...');
+  await fetch(`/api/projects/${activeProjectId}/daily`, { method:'POST' });
+  setTimeout(refreshProject, 3000);
+}
+
+async function resolveApproval(id, choice) {
+  await fetch(`/api/approvals/${id}/resolve`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ choice, notes:'' })
+  });
+  state.approvals = state.approvals.map(a => a.id===id ? {...a, status:'approved', chosen_option:choice} : a);
+  renderApprovals();
+  toast(`Approved: ${choice}`);
+}
+
+async function createProject() {
+  const name = document.getElementById('new-name').value.trim();
+  if (!name) { toast('Name is required.'); return; }
+  const outline = document.getElementById('new-outline').value.trim();
+  const goals = document.getElementById('new-goals').value.trim().split('\n').filter(Boolean);
+  const targets = document.getElementById('new-targets').value.trim().split('\n').filter(Boolean);
+  document.getElementById('create-btn').textContent = 'Creating...';
+  document.getElementById('create-btn').disabled = true;
+  try {
+    const r = await fetch('/api/projects', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, outline, goals: goals.length ? goals : ['Deliver the project successfully'], targets: targets.length ? targets : ['Complete on time'] })
+    });
+    const p = await r.json();
+    state.projects.unshift(p);
+    renderProjects();
+    setActiveProject(p.id);
+    hideModal();
+    toast(`Project "${name}" created!`);
+  } catch(e) { toast('Error: ' + e.message); }
+  document.getElementById('create-btn').textContent = 'Create Project';
+  document.getElementById('create-btn').disabled = false;
+}
+
+async function refreshProject() {
+  if (!activeProjectId) return;
+  try {
+    const r = await fetch(`/api/projects/${activeProjectId}`);
+    const p = await r.json();
+    const idx = state.projects.findIndex(x => x.id === activeProjectId);
+    if (idx >= 0) state.projects[idx] = p; else state.projects.unshift(p);
+    renderProjectMetrics(p);
+    renderTasks(p);
+  } catch(e) {}
+}
+
+// ── Util ───────────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showModal() { document.getElementById('modal').className = 'modal-overlay show'; document.getElementById('new-name').focus(); }
+function hideModal() { document.getElementById('modal').className = 'modal-overlay'; }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show';
+  setTimeout(() => t.className = '', 3000);
+}
+
+// Enter to send, Shift+Enter for newline
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+});
+
+// Close modal on overlay click
+document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) hideModal(); });
+
+connect();
+</script>
+</body>
+</html>
