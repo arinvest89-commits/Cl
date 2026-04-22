@@ -1,0 +1,66 @@
+agent_team:
+  name: "Project Management Agent Team"
+  version: "1.0.0"
+  model: "claude-sonnet-4-6"
+  max_tokens: 8096
+
+agents:
+  orchestrator:
+    name: "Project Manager"
+    role: "pm"
+    temperature: 0.3
+  researcher:
+    name: "Research Analyst"
+    role: "researcher"
+    temperature: 0.4
+  strategist:
+    name: "Strategy Lead"
+    role: "strategist"
+    temperature: 0.5
+  operations:
+    name: "Operations Manager"
+    role: "operations"
+    temperature: 0.3
+  forecaster:
+    name: "Forecasting Analyst"
+    role: "forecaster"
+    temperature: 0.2
+  qa_tester:
+    name: "QA Engineer"
+    role: "qa"
+    temperature: 0.2
+  integrator:
+    name: "Integration Specialist"
+    role: "integrator"
+    temperature: 0.4
+
+acp:
+  host: "0.0.0.0"
+  port: 8765
+  timeout: 30
+  known_agents:
+    openclaw:
+      endpoint: "http://localhost:8766"
+      capabilities: ["research", "analysis", "web_browsing"]
+    paperclip:
+      endpoint: "http://localhost:8767"
+      capabilities: ["task_management", "scheduling", "resource_allocation"]
+
+data:
+  projects_dir: "data/projects"
+  logs_dir: "data/logs"
+  memory_dir: "data/memory"
+
+approval:
+  auto_approve_threshold: "low"  # low/medium/high - auto-approve decisions below this
+  require_approval_for:
+    - "budget_changes"
+    - "major_strategy_shifts"
+    - "external_integrations"
+    - "milestone_completions"
+    - "resource_reallocation"
+
+ui:
+  refresh_rate: 2
+  max_log_lines: 200
+  chat_history_limit: 100
