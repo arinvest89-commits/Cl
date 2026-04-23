@@ -348,4 +348,5 @@ if __name__ == "__main__":
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print("ERROR: ANTHROPIC_API_KEY not set.")
         sys.exit(1)
-    uvicorn.run(app, host="0.0.0.0", port=7860, log_level="warning")
+    port = int(os.environ.get("PORT", 7860))
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
