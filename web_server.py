@@ -14,7 +14,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-sys.path.insert(0, str(Path(__file__).parent))
+ROOT = Path(__file__).parent
+sys.path.insert(0, str(ROOT))
+
+# Load .env if present
+env_file = ROOT / ".env"
+if env_file.exists():
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip())
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -35,7 +45,7 @@ from core.models import (
 
 app = FastAPI(title="Agent Team", docs_url=None, redoc_url=None)
 
-memory = MemoryManager()
+memory = MemoryManager(str(ROOT / "data"))
 orchestrator = Orchestrator(memory, CONFIG["agent_team"]["model"])
 approval_manager = ApprovalManager(memory, auto_approve_threshold="low")
 acp_cfg = CONFIG.get("acp", {})
