@@ -1,0 +1,19 @@
+[Unit]
+Description=Agent Team — Project Management & Execution System
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/Cl/Cl
+EnvironmentFile=/root/Cl/Cl/.env
+ExecStart=/usr/bin/python3 /root/Cl/Cl/web_server.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=agent-team
+
+[Install]
+WantedBy=multi-user.target
