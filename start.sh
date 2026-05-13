@@ -2,48 +2,71 @@
 set -e
 
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVICE_NAME="agent-team"
-SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+OS="$(uname -s)"
 
 echo ""
 echo "  AGENT TEAM — Setup & Launch"
 echo "  ================================"
+echo "  Platform: $OS"
 echo ""
 
 # ── Pull latest code ──────────────────────────────────────────────────────────
 echo "==> Updating code..."
 git -C "$INSTALL_DIR" pull --ff-only 2>/dev/null || true
 
-# ── Install system deps ───────────────────────────────────────────────────────
-echo "==> Installing Python..."
-apt-get install -y python3-pip python-is-python3 -qq 2>/dev/null || true
+# ── Install Python deps per platform ─────────────────────────────────────────
+if [ "$OS" = "Darwin" ]; then
+    # Mac
+    if ! command -v brew &>/dev/null; then
+        echo "==> Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || eval "$(/usr/local/bin/brew shellenv)"
+    fi
+    if ! command -v python3 &>/dev/null; then
+        echo "==> Installing Python 3..."
+        brew install python
+    fi
+    PIP="pip3"
+    PYTHON="python3"
+else
+    # Linux
+    echo "==> Installing Python..."
+    apt-get install -y python3-pip python-is-python3 -qq 2>/dev/null || true
+    PIP="pip3"
+    PYTHON="python3"
+fi
 
 # ── Install Python packages ───────────────────────────────────────────────────
 echo "==> Installing packages..."
-pip3 install -q -r "$INSTALL_DIR/requirements.txt"
+$PIP install -q -r "$INSTALL_DIR/requirements.txt"
 
 # ── API key ───────────────────────────────────────────────────────────────────
 ENV_FILE="$INSTALL_DIR/.env"
-if [ -z "$ANTHROPIC_API_KEY" ] && ! grep -q "ANTHROPIC_API_KEY" "$ENV_FILE" 2>/dev/null; then
-    echo ""
-    echo "  No API key found. You can:"
-    echo "  1. Set it now:  export ANTHROPIC_API_KEY=sk-ant-..."
-    echo "  2. Enter it in the browser setup page at http://localhost:7860"
-    echo ""
-fi
-
-# Write key to .env if provided via env var
 if [ -n "$ANTHROPIC_API_KEY" ]; then
     touch "$ENV_FILE"
     if ! grep -q "ANTHROPIC_API_KEY" "$ENV_FILE" 2>/dev/null; then
         echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" >> "$ENV_FILE"
         echo "==> API key saved to .env"
     fi
+elif ! grep -q "ANTHROPIC_API_KEY" "$ENV_FILE" 2>/dev/null; then
+    echo ""
+    echo "  No API key set. Open http://localhost:7860 to enter it in the browser."
+    echo ""
 fi
 
-# ── Install as systemd service (runs on boot, auto-restarts) ──────────────────
-if command -v systemctl &>/dev/null; then
-    echo "==> Installing systemd service..."
+# ── Launch: systemd on Linux, direct on Mac ───────────────────────────────────
+if [ "$OS" = "Darwin" ]; then
+    echo ""
+    echo "  Starting Agent Team on http://localhost:7860"
+    echo "  Press Ctrl+C to stop."
+    echo ""
+    open "http://localhost:7860" 2>/dev/null || true
+    $PYTHON "$INSTALL_DIR/web_server.py"
+
+elif command -v systemctl &>/dev/null; then
+    SERVICE_NAME="agent-team"
+    SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+    echo "==> Installing as system service..."
     cat > "$SERVICE_FILE" <<EOF
 [Unit]
 Description=Agent Team — Project Management & Execution System
@@ -68,21 +91,16 @@ EOF
     systemctl enable "$SERVICE_NAME" --quiet
     systemctl restart "$SERVICE_NAME"
     echo ""
-    echo "  Agent Team is running as a system service."
-    echo "  It will start automatically on every reboot."
+    echo "  Running as a system service — starts automatically on reboot."
     echo ""
-    echo "  Access:  http://localhost:7860"
+    echo "  http://localhost:7860"
     echo ""
-    echo "  Commands:"
-    echo "    systemctl status $SERVICE_NAME    # check status"
-    echo "    journalctl -u $SERVICE_NAME -f    # view logs"
-    echo "    systemctl restart $SERVICE_NAME   # restart"
+    echo "  systemctl status $SERVICE_NAME"
+    echo "  journalctl -u $SERVICE_NAME -f"
     echo ""
+
 else
-    # No systemd — just run directly
     echo ""
     echo "  Starting Agent Team on http://localhost:7860"
-    echo "  Press Ctrl+C to stop."
-    echo ""
-    python3 "$INSTALL_DIR/web_server.py"
+    $PYTHON "$INSTALL_DIR/web_server.py"
 fi
